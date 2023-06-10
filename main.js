@@ -12,7 +12,45 @@
 (function () {
     'use strict';
 
-    function rob_courses(courses) {
+    async function confirm_click() {
+        // return;
+        for (var i = 0; i < 100; i++) {
+            await new Promise(r => setTimeout(r, 2000));
+
+            // click this confirm button
+            var confirm = document.querySelector("#enrolFromPlan");
+            // console.log(confirm);
+            if (!confirm) {
+                console.log("no more confirm button, exiting");
+                return;
+            }
+            console.log("confirm button found, clicking");
+            confirm.click();
+
+            // close the popup
+            var close = document.getElementsByClassName("close icon-cancel");
+            // console.log(close[0]);
+            console.log("close button found, clicking");
+            close[0].click();
+        }
+    }
+
+    async function confirm_exists() {
+        for (var i = 0; i < 1000; i++) {
+            await new Promise(r => setTimeout(r, 1));
+
+            var confirm = document.querySelector("#enrolFromPlan");
+            if (confirm) {
+                console.log("confirm button found");
+                return;
+            }
+            console.log("waiting for confirm button");
+        }
+    }
+
+    async function rob_courses(courses) {
+
+        // first click all the 'Enrol' buttons
         for (var i = 0; i < courses.length; i++) {
             console.log("Robbing course " + i.toString());
             var cnt_enrol = 0; // timeout counter
@@ -29,29 +67,15 @@
             }
             // click the button
             console.log("enrol button found, clicking");
-            console.log(course);
+            // console.log(course);
             course.click();
-
-            // sleep asynchronically
-            setTimeout(function () {
-                // until find 'Confirm' button
-                var cnt_confirm = 0;
-                var confirm = document.querySelector("#enrolFromPlan");
-                while (!confirm) {
-                    confirm = document.querySelector("#enrolFromPlan");
-                    console.log("waiting for confirm button");
-                    console.log(confirm);
-                    if (cnt_confirm++ > 10000) {
-                        console.log("timeout");
-                        return;
-                    }
-                }
-                // click the button
-                console.log("confirm button found, clicking");
-                console.log(confirm);
-                confirm.click();
-            }, 100);
         }
+
+        // wait for the page to load
+        await confirm_exists();
+
+        // then click all the 'Confirm' buttons
+        confirm_click();
     }
 
     // window.onload = function () {
