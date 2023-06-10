@@ -12,35 +12,41 @@
 (function () {
     'use strict';
 
-    async function confirm_click() {
-        // return;
-        for (var i = 0; i < 100; i++) {
-            await new Promise(r => setTimeout(r, 2000));
+    async function confirm_click(course_num) {
+        var popups = document.getElementsByClassName("modal-container");
+        // var popups = document.getElementsByClassName("modal-content");
 
-            // click this confirm button
-            var confirm = document.querySelector("#enrolFromPlan");
-            // console.log(confirm);
-            if (!confirm) {
-                console.log("no more confirm button, exiting");
-                return;
-            }
-            console.log("confirm button found, clicking");
+        if (popups.length != course_num) {
+            console.log("Error: number of popups does not match number of courses");
+            console.log("Number of popups: " + popups.length.toString());
+            console.log("Number of courses: " + course_num.toString());
+        }
+
+        var popups = document.getElementsByClassName("modal-container"); // duplicate for debugging
+
+        for (var i = 0; i < popups.length; i++) {
+            // find Title
+            var title = popups[i].querySelector("#modalHeading");
+            console.log(title.innerHTML);
+
+            // find 'Confirm' button
+            var confirm = popups[i].querySelector("#enrolFromPlan");
             confirm.click();
+            console.log("clicked confirm");
 
-            // close the popup
-            var close = document.getElementsByClassName("close icon-cancel");
-            // console.log(close[0]);
-            console.log("close button found, clicking");
-            close[0].click();
+            // find 'Close' button
+            var close = popups[i].querySelector('[class="close icon-cancel"]');
+            close.click();
+            console.log("clicked close");
         }
     }
 
-    async function confirm_exists() {
+    async function confirm_exists(course_num) {
         for (var i = 0; i < 1000; i++) {
             await new Promise(r => setTimeout(r, 1));
 
-            var confirm = document.querySelector("#enrolFromPlan");
-            if (confirm) {
+            var popups = document.getElementsByClassName("modal-container");
+            if (popups.length == course_num) {
                 console.log("confirm button found");
                 return;
             }
@@ -49,6 +55,9 @@
     }
 
     async function rob_courses(courses) {
+        // await new Promise(r => setTimeout(r, 1));
+
+        var courses = document.getElementsByClassName("planningBox currentlyEnrolledBox courseSearchBox"); // duplicate for debugging
 
         // first click all the 'Enrol' buttons
         for (var i = 0; i < courses.length; i++) {
@@ -56,29 +65,19 @@
             var cnt_enrol = 0; // timeout counter
 
             // find 'Enrol' button
-            var course = courses[i].querySelector("div.header-info-vertical > div > div.controls-container > div:nth-child(1) > a");
-            while (!course) {
-                console.log("waiting for enrol button");
-                course = courses[i].querySelector("div.header-info-vertical > div > div.controls-container > div:nth-child(1) > a");
-                if (cnt_enrol++ > 10000) {
-                    console.log("timeout");
-                    return;
-                }
-            }
-            // click the button
-            console.log("enrol button found, clicking");
+            var course = courses[i].querySelector('[class="updateEnrolment btn btn-sm btn-primary active"]');
+            var code = courses[i].querySelector('[class="enrolment-code"]');
+            console.log(code.innerHTML);
             // console.log(course);
             course.click();
         }
 
         // wait for the page to load
-        await confirm_exists();
+        await confirm_exists(courses.length);
 
         // then click all the 'Confirm' buttons
-        confirm_click();
+        await confirm_click(courses.length);
     }
-
-    // window.onload = function () {
 
     // Search "Your enrolment cart is empty" on the page
     var no_results = document.body.innerHTML.search("Your enrolment cart is empty");
@@ -113,7 +112,5 @@
     btn.addEventListener("click", function () {
         rob_courses(courses);
     });
-
-    // }
 
 })();
