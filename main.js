@@ -12,20 +12,18 @@
 (function () {
     'use strict';
 
-    function load_courses(courses) {
+    function load_course_popup(courses) {
         console.log("Loading courses");
-        for (var i = 0; i < courses.length; i++) {
-            console.log("Loading course " + i.toString());
-
+        for (let course of courses) {
             // find 'Enrol' button
-            var course = courses[i].querySelector('[class="updateEnrolment btn btn-sm btn-primary active"]');
-            var code = courses[i].querySelector('[class="enrolment-code"]');
-            console.log(code.innerText);
-            course.click();
+            var enrol_btn = course.querySelector('[class="updateEnrolment btn btn-sm btn-primary active"]');
+            var code = course.querySelector('[class="enrolment-code"]');
+            console.log("Loading course " + code.innerText);
+            enrol_btn.click();
         }
     }
 
-    async function confirm_click(course_num) {
+    function click_enrol(course_num) {
         var popups = document.getElementsByClassName("modal-container");
 
         if (popups.length != course_num) {
@@ -34,24 +32,42 @@
             console.log("Number of courses: " + course_num.toString());
         }
 
-        for (var i = 0; i < popups.length; i++) {
+        for (let popup of popups) {
             // find Title
-            var title = popups[i].querySelector("#modalHeading");
-            console.log(title.innerHTML);
+            var title = popup.querySelector("#modalHeading");
+            console.log(title.innerText.replace("Opening dialog.", "Just enrolled"));
 
             // find 'Confirm' button
-            var confirm = popups[i].querySelector("#enrolFromPlan");
+            var confirm = popup.querySelector("#enrolFromPlan");
             confirm.click();
             console.log("clicked confirm");
 
+        }
+    }
+
+    function click_close(course_num) {
+        var popups = document.getElementsByClassName("modal-container");
+
+        if (popups.length != course_num) {
+            console.log("Error: number of popups does not match number of courses");
+            console.log("Number of popups: " + popups.length.toString());
+            console.log("Number of courses: " + course_num.toString());
+        }
+
+        for (let popup of popups) {
+            // find Title
+            var title = popup.querySelector("#modalHeading");
+            console.log(title.innerText.replace("Opening dialog.", "Just closed"));
+
             // find 'Close' button
-            var close = popups[i].querySelector('[class="close icon-cancel"]');
+            var close = popup.querySelector('[class="close icon-cancel"]');
             close.click();
             console.log("clicked close");
         }
     }
 
-    async function confirm_exists(course_num) {
+    async function wait_enrol_btn(course_num) {
+        console.log("waiting for " + course_num.toString() + " confirm buttons");
         return new Promise((resolve) => {
             const observer = new MutationObserver((mutations) => {
                 const popups = document.getElementsByClassName("modal-container");
@@ -63,23 +79,9 @@
                     console.log("waiting for confirm button");
                 }
             });
-
             observer.observe(document, { childList: true, subtree: true });
         });
     }
-
-    async function rob_courses(courses) {
-        // first load all the courses
-        load_courses(courses);
-
-        // wait for the page to load
-        await confirm_exists(courses.length);
-
-        // then click all the 'Confirm' buttons
-        await confirm_click(courses.length);
-    }
-
-
 
     // Add the button to the page, at the left of the button with title="Get email help and access support resources"
     var observer = new MutationObserver(function (mutations) {
@@ -91,7 +93,7 @@
             observer.disconnect();
 
             // Search "Your enrolment cart is empty" on the page
-            var no_results = document.body.innerHTML.search("Your enrolment cart is empty");
+            var no_results = document.body.innerText.search("Your enrolment cart is empty");
             // If the string exists, then prompt the user to add courses
             if (no_results != -1) {
                 alert("Your enrolment cart is empty");
@@ -102,8 +104,7 @@
             var num_courses = courses.length;
             for (var i = 0; i < num_courses; i++) {
                 // Print in plain text
-                // Remove whitespace and newlines
-                console.log(courses[i].querySelector("h4").innerText.replace(/\s/g, ' '));
+                console.log(courses[i].querySelector("h4").innerText);
             }
             console.log(num_courses + " courses found");
 
@@ -116,19 +117,24 @@
             parent.insertBefore(load_btn, child);
 
             // Add event listener to the button
-            load_btn.addEventListener("click", function () {
-                load_courses(courses);
+            load_btn.addEventListener("click", async function () {
+                load_course_popup(courses);
+                await wait_enrol_btn(num_courses);
+                click_close(num_courses);
             });
 
             // Create a button with class "acorn-btn" 
             var rob_btn = document.createElement("div");
             rob_btn.className = "acorn-btn";
-            rob_btn.innerHTML = "Rob " + num_courses.toString() + " Courses";
+            rob_btn.innerText = "Rob " + num_courses.toString() + " Courses";
             parent.insertBefore(rob_btn, child);
 
             // Add event listener to the button
-            rob_btn.addEventListener("click", function () {
-                rob_courses(courses);
+            rob_btn.addEventListener("click", async function () {
+                load_course_popup(courses);
+                await wait_enrol_btn(courses.length);
+                click_enrol(courses.length);
+                click_close(courses.length);
             });
 
         }
