@@ -11,9 +11,11 @@
 
 (function () {
     'use strict';
+    const down_arrow = " \u25BC";
+    const up_arrow = " \u25B2";
 
     function load_course_popup(courses) {
-        console.log("Loading courses");
+        console.warn("Loading courses" + down_arrow);
         for (let course of courses) {
             // find 'Enrol' button
             var enrol_btn = course.querySelector('[class="updateEnrolment btn btn-sm btn-primary active"]');
@@ -21,60 +23,76 @@
             console.log("Loading course " + code.innerText);
             enrol_btn.click();
         }
+        console.warn("Courses loaded" + up_arrow);
     }
 
-    function click_enrol(course_num) {
+    function click_enrol(course_num, rob_btn) {
         var popups = document.getElementsByClassName("modal-container");
 
         if (popups.length != course_num) {
-            console.log("Error: number of popups does not match number of courses");
-            console.log("Number of popups: " + popups.length.toString());
-            console.log("Number of courses: " + course_num.toString());
+            console.warn("Error: number of popups does not match number of courses");
+            console.warn("Number of popups: " + popups.length.toString());
+            console.warn("Number of courses: " + course_num.toString());
         }
 
+        console.warn("Enrolling courses" + down_arrow);
+        var counter = 0;
         for (let popup of popups) {
             // find Title
             var title = popup.querySelector("#modalHeading");
-            console.log(title.innerText.replace("Opening dialog.", "Just enrolled"));
+            console.log(title.innerText.replace("Opening dialog.", "Enrolling"));
 
             // find 'Confirm' button
             var confirm = popup.querySelector("#enrolFromPlan");
             confirm.click();
-            console.log("clicked confirm");
-
+            counter++;
+            var progress = counter.toString() + "/" + course_num.toString();
+            console.log("clicked confirm " + progress);
+            rob_btn.innerText = "Robbing " + progress + " Courses";
         }
+        console.warn("Courses enrolled" + up_arrow);
     }
 
-    function click_close(course_num) {
+    function click_close(course_num, load_btn) {
         var popups = document.getElementsByClassName("modal-container");
 
         if (popups.length != course_num) {
-            console.log("Error: number of popups does not match number of courses");
-            console.log("Number of popups: " + popups.length.toString());
-            console.log("Number of courses: " + course_num.toString());
+            console.warn("Error: number of popups does not match number of courses");
+            console.warn("Number of popups: " + popups.length.toString());
+            console.warn("Number of courses: " + course_num.toString());
         }
 
+        console.warn("Closing popups" + down_arrow);
+        var counter = 0;
         for (let popup of popups) {
             // find Title
             var title = popup.querySelector("#modalHeading");
-            console.log(title.innerText.replace("Opening dialog.", "Just closed"));
+            console.log(title.innerText.replace("Opening dialog.", "Closing"));
 
             // find 'Close' button
             var close = popup.querySelector('[class="close icon-cancel"]');
             close.click();
-            console.log("clicked close");
+            counter++;
+            var progress = counter.toString() + "/" + course_num.toString();
+            console.log("clicked close " + progress);
+            load_btn.innerText = "Loading " + progress + " Courses";
         }
+        console.warn("Popups closed" + up_arrow);
     }
 
     async function wait_enrol_btn(course_num) {
         console.log("waiting for " + course_num.toString() + " confirm buttons");
         return new Promise((resolve) => {
-            const observer = new MutationObserver((mutations) => {
+            var observer = new MutationObserver((mutations) => {
                 const popups = document.getElementsByClassName("modal-container");
+                console.log("confirm button "
+                    + popups.length.toString()
+                    + "/" + course_num.toString()
+                    + " found");
                 if (popups.length === course_num) {
-                    console.log("confirm button found");
                     observer.disconnect();
                     resolve();
+                    console.log("all confirm buttons found")
                 } else {
                     console.log("waiting for confirm button");
                 }
@@ -106,21 +124,22 @@
                 // Print in plain text
                 console.log(courses[i].querySelector("h4").innerText);
             }
-            console.log(num_courses + " courses found");
+            console.warn(num_courses + " courses found");
 
             // Create a button with class "acorn-btn" 
             var load_btn = document.createElement("div");
             load_btn.className = "acorn-btn";
-            load_btn.innerText = "Load Courses";
+            load_btn.innerText = "Load " + num_courses.toString() + " Courses";
             var parent = element[0].children[0];
             var child = parent.children[0];
             parent.insertBefore(load_btn, child);
 
             // Add event listener to the button
             load_btn.addEventListener("click", async function () {
+                console.clear();
                 load_course_popup(courses);
                 await wait_enrol_btn(num_courses);
-                click_close(num_courses);
+                click_close(num_courses, load_btn);
             });
 
             // Create a button with class "acorn-btn" 
@@ -131,10 +150,11 @@
 
             // Add event listener to the button
             rob_btn.addEventListener("click", async function () {
+                console.clear();
                 load_course_popup(courses);
                 await wait_enrol_btn(courses.length);
-                click_enrol(courses.length);
-                click_close(courses.length);
+                click_enrol(courses.length, rob_btn);
+                click_close(courses.length, load_btn);
             });
 
         }
@@ -144,4 +164,3 @@
     observer.observe(document, { childList: true, subtree: true });
 
 })();
-
