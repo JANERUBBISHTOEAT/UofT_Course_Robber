@@ -55,8 +55,6 @@
     }
 
     async function rob_courses(courses) {
-        // await new Promise(r => setTimeout(r, 1));
-
         var courses = document.getElementsByClassName("planningBox currentlyEnrolledBox courseSearchBox"); // duplicate for debugging
 
         // first click all the 'Enrol' buttons
@@ -79,38 +77,46 @@
         await confirm_click(courses.length);
     }
 
-    // Search "Your enrolment cart is empty" on the page
-    var no_results = document.body.innerHTML.search("Your enrolment cart is empty");
-    // If the string exists, then prompt the user to add courses
-    if (no_results != -1) {
-        alert("Your enrolment cart is empty");
-        return;
-    }
-
-    // Class "planningBox currentlyEnrolledBox courseSearchBox" is the course in the table
-    var courses = document.getElementsByClassName("planningBox currentlyEnrolledBox courseSearchBox");
-    console.log(courses);
-    // for (var i = 0; i < 2; i++) {
-    //     // Get the course code
-    //     console.log(courses[i]);
-    // }
-
-    var num_courses = courses.length;
-    console.log(num_courses + " courses found");
-
-    // Create a button with class "acorn-btn" 
-    var btn = document.createElement("div");
-    btn.className = "acorn-btn";
-    btn.innerHTML = "Rob " + num_courses.toString() + " Courses";
 
     // Add the button to the page, at the left of the button with title="Get email help and access support resources"
-    var parent = document.getElementsByClassName("flex-item user-controls")[0].children[0];
-    var child = parent.children[0];
-    parent.insertBefore(btn, child);
+    var observer = new MutationObserver(function (mutations) {
+        var element = document.getElementsByClassName("flex-item user-controls");
+        var courses = document.getElementsByClassName("planningBox currentlyEnrolledBox courseSearchBox");
 
-    // Add event listener to the button
-    btn.addEventListener("click", function () {
-        rob_courses(courses);
+        // Element exists, add the button
+        if (element.length > 0 && courses.length > 0) {
+            // Search "Your enrolment cart is empty" on the page
+            var no_results = document.body.innerHTML.search("Your enrolment cart is empty");
+            // If the string exists, then prompt the user to add courses
+            if (no_results != -1) {
+                alert("Your enrolment cart is empty");
+                return;
+            }
+
+            // Class "planningBox currentlyEnrolledBox courseSearchBox" is the course in the table
+            console.log(courses);
+
+            var num_courses = courses.length;
+            console.log(num_courses + " courses found");
+
+            // Create a button with class "acorn-btn" 
+            var btn = document.createElement("div");
+            btn.className = "acorn-btn";
+            btn.innerHTML = "Rob " + num_courses.toString() + " Courses";
+            var parent = element[0].children[0];
+            var child = parent.children[0];
+            parent.insertBefore(btn, child);
+
+            // Add event listener to the button
+            btn.addEventListener("click", function () {
+                rob_courses(courses);
+            });
+            observer.disconnect();
+        }
     });
+
+    // Observe the page for changes
+    observer.observe(document, { childList: true, subtree: true });
+
 
 })();
